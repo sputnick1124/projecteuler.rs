@@ -1,20 +1,26 @@
 extern crate num;
 
 use num::bigint::{BigUint};
-use num::{ToPrimitive, FromPrimitive, pow, Zero, One};
+use num::{ToPrimitive, FromPrimitive, pow, Zero, One, Integer, NumCast};
 use std::collections::HashMap;
+use std::ops::{Add};
+use std::hash::{Hash};
 
-struct Sieve {
-    masks: HashMap<usize, usize>,
-    v: usize,
+struct Sieve<T>
+    where T: Integer
+{
+    masks: HashMap<T, T>,
+    v: T,
 }
 
-impl Iterator for Sieve {
-    type Item = usize;
-    fn next(&mut self) -> Option<usize> {
-        if self.v == 2 { // handle starting case
-            self.v += 1;
-            return Some(2);
+impl<T> Iterator for Sieve<T>
+    where T: Integer + NumCast + Add + Hash
+{
+    type Item = T;
+    fn next(&mut self) -> Option<T> {
+        if self.v == NumCast::from(2).unwrap() { // handle starting case
+            self.v += T::one();
+            return Some(NumCast::from(2).unwrap());
         } else {
             let q = self.v;
 
@@ -30,16 +36,14 @@ impl Iterator for Sieve {
                     }
                     self.masks.insert(x, p);// insert back into map with updated value
 
-                    self.v += 2;            // increment the search number by 2
-                    //self.v += 1;            // increment the search number by 2
+                    self.v += NumCast::from(2).unwrap();            // increment the search number by 2
                     self.next()             // and call self
                 }
                 None => {                           // else (if not already in map)
-                    self.masks.insert(q*q, 2*q);    // place in map
-                    //self.masks.insert(q*q, q);    // place in map
-                    //println!("{:?}", self.masks);
-                    self.v += 2;                    // and it's prime. increment and return
-                    //self.v += 1;                    // and it's prime. increment and return
+                    self.masks.insert(q*q, NumCast::from(2).unwrap()*q);    // place in map
+
+                    self.v += NumCast::from(2).unwrap(); // and it's prime. increment and return
+
                     Some(q)
                 }
             }
@@ -47,17 +51,20 @@ impl Iterator for Sieve {
     }
 }
 
-fn sieve() -> Sieve {
-    Sieve{masks: HashMap::new(), v: 2}
+fn sieve<T>() -> Sieve<T>
+    where T: Integer + NumCast + Hash
+{
+    Sieve{masks: HashMap::new(), v: NumCast::from(2).unwrap()}
 }
 
-fn list_primes(n: usize) -> Vec<usize> {
+fn list_primes<T>(n: T) -> Vec<T>
+    where T: Integer + NumCast
+{
     let mut primes: Vec<bool> = (0..n + 1)
                                     .map(|num| num == 2 || num & 1 != 0)
                                     .collect();
     let mut num: usize = 3;
-    //let mut n: usize = 0;
-    //let mut p: bool = false;
+
     while num * num <= n {
         let mut j = num * num;
         while j <= n {
@@ -65,11 +72,6 @@ fn list_primes(n: usize) -> Vec<usize> {
             j += num;
         }
         num += 2;
-        //num *= 2;
-        //let r = primes.into_iter().enumerate().find(|&(i, p)| *p);
-
-        //println!("next prime: {:?}", primes[num..].into_iter().enumerate().find(|&(i, p)| (*p)));
-        //println!("num: {}", num);
         
     }
     primes
@@ -77,20 +79,9 @@ fn list_primes(n: usize) -> Vec<usize> {
         .enumerate()
         .skip(2)
         .filter_map(
-            |(i, p)| if p {Some(i)} else {None})
-        .collect::<Vec<usize>>()
+            |(i, p)| if p {Some(NumCast::from(i))} else {None})
+        .collect::<Vec<T>>()
 }
-
-//fn is_prime(n: usize, primes: &Vec<usize>) -> bool {
-    //for &p in primes {
-        //let q = n / p;
-        //if q < p{ return true };
-        //let r = n - q * p;
-        //if r == 0 { return false };
-    //}
-
-    //panic!("too few primes")
-//}
 
 pub fn euler003(n: u64) -> Option<u64> {
     let bignum = n;//600851475143;
@@ -186,6 +177,49 @@ fn is_pythagorean(a: u32, b: u32, c: u32) -> bool {
 
 fn is_pyth_sum_1000(a: u32, b: u32, c: u32) -> bool {
     return a + b + c == 1000
+}
+
+pub fn euler008() -> BigUint {
+    let bignum_bytes = b"7316717653133062491922511967442657474235534919493496983520312774506326 
+                       239578318016984801869478851843858615607891129494954595017379583319528532
+                       088055111254069874715852386305071569329096329522744304355766896648950445
+                       244523161731856403098711121722383113622298934233803081353362766142828064
+                       444866452387493035890729629049156044077239071381051585930796086670172427
+                       121883998797908792274921901699720888093776657273330010533678812202354218
+                       097512545405947522435258490771167055601360483958644670632441572215539753
+                       697817977846174064955149290862569321978468622482839722413756570560574902
+                       614079729686524145351004748216637048440319989000889524345065854122758866
+                       688116427171479924442928230863465674813919123162824586178664583591245665
+                       294765456828489128831426076900422421902267105562632111110937054421750694
+                       165896040807198403850962455444362981230987879927244284909188845801561660
+                       979191338754992005240636899125607176060588611646710940507754100225698315
+                       520005593572972571636269561882670428252483600823257530420752963450";
+    let mut n = BigUint::parse_bytes(bignum_bytes, 10).unwrap();
+    let d: BigUint = FromPrimitive::from_u64(10).unwrap();
+    let q: BigUint = pow(FromPrimitive::from_u64(10).unwrap(), 13);
+
+    let mut biggest: BigUint = Zero::zero();
+    loop {
+        if n == Zero::zero() {
+            break
+        }
+        let mut m: BigUint = One::one();
+        let mut m0: BigUint = &n%&q;
+
+        loop {
+            m *= &m0 % &d;
+            m0 /= &d;
+            if m0 == Zero::zero() {
+                break;
+            }
+        }
+        if m > biggest {
+            biggest = m;
+        }
+
+        n /= &d;
+    }
+    biggest
 }
 
 pub fn euler009(n: u32) -> Option<u32> {

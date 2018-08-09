@@ -1,13 +1,12 @@
 extern crate euler;
-extern crate num;
+//extern crate num;
 
-use num::BigUint;
-use num::FromPrimitive;
+//use num::BigUint;
+//use num::FromPrimitive;
 
-use euler::euler020;
+use euler::euler003;
 
 fn main() {
-    let n = BigUint::from_u64(10_000).unwrap();
 
-    println!("{}", euler020(n));
+    println!("{}", euler003(600851475143).unwrap());
 }

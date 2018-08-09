@@ -273,7 +273,8 @@ fn test_euler002() {
 
 pub fn euler003(n: usize) -> Option<usize> {
     let bignum = n;//600851475143;
-    let primes: Vec<usize> = list_primes(n);
+    let limit = (n as f64).sqrt() as usize;
+    let primes: Vec<usize> = list_primes(limit);
 
     for p in primes.iter().rev() {
         if bignum%(p.to_usize().unwrap()) == 0 {

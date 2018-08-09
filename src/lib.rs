@@ -3,8 +3,37 @@ extern crate num;
 use num::bigint::{BigUint};
 use num::{ToPrimitive, FromPrimitive, pow, Zero, One, Integer, NumCast};
 use std::collections::HashMap;
-use std::ops::{Add};
+use std::ops::{AddAssign, Add, Mul};
 use std::hash::{Hash};
+
+// Functions for Problem 2
+struct Fibonacci<T>
+    where T: Integer
+{
+    a: T,
+    b: T,
+}
+
+impl<T> Iterator for Fibonacci<T>
+    where T: Integer +
+             Add<T, Output = T> +
+             AddAssign +
+             Clone
+{
+    type Item = T;
+    fn next(&mut self) -> Option<T> {
+        let tmp: T = self.a.clone();
+        self.a = self.b.clone();
+        self.b += tmp;
+        Some(self.a.clone())
+    }
+}
+
+fn fibonacci<T>() -> Fibonacci<T>
+    where T: Integer + One
+{
+    Fibonacci{ a: T::one(), b: T::one() }
+}
 
 struct Sieve<T>
     where T: Integer
@@ -14,35 +43,43 @@ struct Sieve<T>
 }
 
 impl<T> Iterator for Sieve<T>
-    where T: Integer + NumCast + Add + Hash
+    where T: Integer + 
+             NumCast + 
+             AddAssign + 
+             Hash + 
+             Clone +
+             Add<T, Output = T> + 
+             Mul<T, Output = T>
 {
     type Item = T;
     fn next(&mut self) -> Option<T> {
-        if self.v == NumCast::from(2).unwrap() { // handle starting case
+        let two : T = NumCast::from(2).unwrap();
+        if self.v == two.clone() { // handle starting case
             self.v += T::one();
-            return Some(NumCast::from(2).unwrap());
+            return Some(two.clone());
         } else {
-            let q = self.v;
+            let q = self.v.clone();
 
             match self.masks.remove(&q) {   // lookup number in map
                 Some(p) => {                // if there
-                    let mut x = q + p;      // start incrementing its multiples
+                    let mut x = q + p.clone();      // start incrementing its multiples
                     loop {
                         if self.masks.contains_key(&x) {
-                            x += p;
+                            x += p.clone();
                         } else {
                             break;          // until its multiples are no longer in the map
                         }
                     }
                     self.masks.insert(x, p);// insert back into map with updated value
 
-                    self.v += NumCast::from(2).unwrap();            // increment the search number by 2
+                    self.v += two.clone();            // increment the search number by 2
                     self.next()             // and call self
                 }
                 None => {                           // else (if not already in map)
-                    self.masks.insert(q*q, NumCast::from(2).unwrap()*q);    // place in map
+                    //self.masks.insert(q*q, NumCast::from(2).unwrap()*q);    // place in map
+                    self.masks.insert(q.clone()*q.clone(), two.clone()*q.clone());    // place in map
 
-                    self.v += NumCast::from(2).unwrap(); // and it's prime. increment and return
+                    self.v += two; // and it's prime. increment and return
 
                     Some(q)
                 }
@@ -57,7 +94,7 @@ fn sieve<T>() -> Sieve<T>
     Sieve{masks: HashMap::new(), v: NumCast::from(2).unwrap()}
 }
 
-fn list_primes<T>(n: T) -> Vec<T>
+fn list_primes<T>(n: usize) -> Vec<T>
     where T: Integer + NumCast
 {
     let mut primes: Vec<bool> = (0..n + 1)
@@ -79,23 +116,8 @@ fn list_primes<T>(n: T) -> Vec<T>
         .enumerate()
         .skip(2)
         .filter_map(
-            |(i, p)| if p {Some(NumCast::from(i))} else {None})
+            |(i, p)| if p {Some(NumCast::from(i).unwrap())} else {None})
         .collect::<Vec<T>>()
-}
-
-pub fn euler003(n: u64) -> Option<u64> {
-    let bignum = n;//600851475143;
-
-    let limit = (bignum as f64).sqrt() as usize;
-    let primes = list_primes(limit);
-
-    for p in primes.iter().rev() {
-        if bignum%(p.to_u64().unwrap()) == 0 {
-            return Some(p.to_u64().unwrap());
-        } 
-    }
-    return None;
-
 }
 
 fn is_palin(num: usize) -> bool {
@@ -116,6 +138,158 @@ fn is_palin(num: usize) -> bool {
     true
 }
 
+fn largest_multiple(n: usize) -> usize {
+    let primes: Vec<usize> = list_primes(n);
+
+    let mut res = primes.iter().skip(1).fold(1, |acc, x| acc * x);
+
+    for i in 1..n {
+        if res%i > 0 {
+            for j in 1..i {
+                if i%j == 0 {
+                    res *= j;
+                }
+            }
+        }
+    }
+    res
+}
+
+fn sum_squares(n: usize) -> usize {
+    (1..n+1).fold(0, |acc, x| acc + x.pow(2))
+}
+
+fn square_sum(n: usize) -> usize {
+    (1..n+1).fold(0, |acc, x| acc + x).pow(2)
+}
+
+fn is_pythagorean(a: u32, b: u32, c: u32) -> bool {
+    a.pow(2) + b.pow(2) == c.pow(2)
+}
+
+fn is_pyth_sum_1000(a: u32, b: u32, c: u32) -> bool {
+    return a + b + c == 1000
+}
+
+fn tri_number(n: u64) -> u64 {
+    (n + 1)*n/2
+}
+
+fn find_factors(n: u64) -> Vec<u64> {
+    let mut n = n;
+    let mut factors: Vec<u64> = Vec::new();
+
+    loop {
+        if n == 1 {
+            break;
+        }
+        for p in 2.. {
+            if n%p == 0 {
+                n /= p;
+                factors.push(p);
+                break;
+            }
+        }
+    }
+    factors
+}
+
+fn count_factors(factors: Vec<u64>) -> Vec<usize> {
+    let mut counts: HashMap<u64, usize> = HashMap::new();
+    for &factor in factors.iter() {
+        let count = counts.entry(factor).or_insert(1);
+        *count += 1;
+    }
+    counts.values().map(|&x| x).collect()
+}
+
+fn number_of_factors(n: u64) -> usize {
+    count_factors(find_factors(n)).iter()
+        .fold(1, |acc, x| acc*(x))
+}
+
+fn collatz(x: u64, count: u64) -> u64 {
+    match x {
+        1 => count + 1,
+        _ => {
+            if x % 2 == 0 {
+                collatz(x/2, count +1)
+            } else {
+                collatz(3*x + 1, count + 1)
+            }
+        },
+    }
+}
+
+fn add_digits(n: BigUint) -> BigUint {
+    if n == BigUint::zero() {
+        n
+    } else {
+        let ten = BigUint::from_u64(10).unwrap();
+        &n%&ten + add_digits(&n/&ten)
+    }
+}
+
+
+fn fact(n: BigUint) -> BigUint {
+    if n == BigUint::one() {
+        n
+    } else {
+        &n * fact(&n - &BigUint::one())
+    }
+}
+
+pub fn euler001(n: usize) -> usize {
+    (1..n)
+        .filter_map(|x| if x%3==0 || x%5 == 0 {Some(x)} else {None})
+        .fold(0usize, |acc, x| acc + x)
+}
+
+#[test]
+fn test_euler001() {
+    assert_eq!(23, euler001(10));
+}
+
+pub fn euler002(n: u64) -> u64
+    //where T: Integer +
+             //Add<T, Output = T> +
+             //Zero +
+             //AddAssign +
+             //Clone +
+             //NumCast
+{
+    let fibs = fibonacci::<u64>();
+    fibs
+        .take_while(|x| x <= &n)
+        .filter_map(|x| if x%2 == 0 { Some(x) } else { None})
+        .fold(0, |acc, x| acc + x)
+}
+
+#[test]
+fn test_euler002() {
+    assert_eq!(2, euler002(3));
+    assert_eq!(44, euler002(50));
+}
+
+pub fn euler003(n: usize) -> Option<usize> {
+    let bignum = n;//600851475143;
+    let primes: Vec<usize> = list_primes(n);
+
+    for p in primes.iter().rev() {
+        if bignum%(p.to_usize().unwrap()) == 0 {
+            return Some(p.to_usize().unwrap());
+        } 
+    }
+    return None;
+
+}
+
+#[test]
+fn test_euler003() {
+    assert_eq!(Some(29), euler003(13195));
+    assert_eq!(Some(6875), euler003(600851475143));
+}
+
 pub fn euler004(n: usize) -> Option<usize> {
     let mut max_palin = 0;
     for i in (100..n+1).rev() {
@@ -132,33 +306,8 @@ pub fn euler004(n: usize) -> Option<usize> {
     return None;
 }
 
-fn largest_multiple(n: usize) -> usize {
-    let primes = list_primes(n);
-
-    let mut res = primes.iter().skip(1).fold(1, |acc, x| acc * x);
-
-    for i in 1..n {
-        if res%i > 0 {
-            for j in 1..i {
-                if i%j == 0 {
-                    res *= j;
-                }
-            }
-        }
-    }
-    res
-}
-
 pub fn euler005(n: usize) -> usize {
     largest_multiple(n)
-}
-
-fn sum_squares(n: usize) -> usize {
-    (1..n+1).fold(0, |acc, x| acc + x.pow(2))
-}
-
-fn square_sum(n: usize) -> usize {
-    (1..n+1).fold(0, |acc, x| acc + x).pow(2)
 }
 
 pub fn euler006(n: usize) -> usize {
@@ -169,14 +318,6 @@ pub fn euler007(n: usize) -> Option<usize> {
     let s = sieve();
     let mut v = s.skip(n);
     v.next()
-}
-
-fn is_pythagorean(a: u32, b: u32, c: u32) -> bool {
-    a.pow(2) + b.pow(2) == c.pow(2)
-}
-
-fn is_pyth_sum_1000(a: u32, b: u32, c: u32) -> bool {
-    return a + b + c == 1000
 }
 
 pub fn euler008() -> BigUint {
@@ -236,45 +377,8 @@ pub fn euler009(n: u32) -> Option<u32> {
 }
 
 pub fn euler010(limit: usize) -> usize {
-    let s = sieve();
+    let s : Sieve<usize> = sieve();
     s.take_while(|x| x < &limit).fold(0usize, |acc, x| acc + x)
-}
-
-fn tri_number(n: u64) -> u64 {
-    (n + 1)*n/2
-}
-
-fn find_factors(n: u64) -> Vec<u64> {
-    let mut n = n;
-    let mut factors: Vec<u64> = Vec::new();
-
-    loop {
-        if n == 1 {
-            break;
-        }
-        for p in 2.. {
-            if n%p == 0 {
-                n /= p;
-                factors.push(p);
-                break;
-            }
-        }
-    }
-    factors
-}
-
-fn count_factors(factors: Vec<u64>) -> Vec<usize> {
-    let mut counts: HashMap<u64, usize> = HashMap::new();
-    for &factor in factors.iter() {
-        let count = counts.entry(factor).or_insert(1);
-        *count += 1;
-    }
-    counts.values().map(|&x| x).collect()
-}
-
-fn number_of_factors(n: u64) -> usize {
-    count_factors(find_factors(n)).iter()
-        .fold(1, |acc, x| acc*(x))
 }
 
 pub fn euler012(n: usize) -> u64 {
@@ -283,44 +387,13 @@ pub fn euler012(n: usize) -> u64 {
 
 }
 
-fn collatz(x: u64, count: u64) -> u64 {
-    match x {
-        1 => count + 1,
-        _ => {
-            if x % 2 == 0 {
-                collatz(x/2, count +1)
-            } else {
-                collatz(3*x + 1, count + 1)
-            }
-        },
-    }
-}
-
 pub fn euler014(n: u64) -> u64 {
     (1..n).map(|x| collatz(x, 0)).max().unwrap()
 }
 
-fn add_digits(n: BigUint) -> BigUint {
-    if n == BigUint::zero() {
-        n
-    } else {
-        let ten = BigUint::from_u64(10).unwrap();
-        &n%&ten + add_digits(&n/&ten)
-    }
-}
-
-
 pub fn euler016(power: usize) -> BigUint {
     let two : BigUint = BigUint::from_u64(2u64).unwrap();
     add_digits(pow(two, power))
-}
-
-fn fact(n: BigUint) -> BigUint {
-    if n == BigUint::one() {
-        n
-    } else {
-        &n * fact(&n - &BigUint::one())
-    }
 }
 
 pub fn euler020(n: BigUint) -> BigUint {

@@ -288,24 +288,32 @@ pub fn euler003(n: usize) -> Option<usize> {
 #[test]
 fn test_euler003() {
     assert_eq!(Some(29), euler003(13195));
-    assert_eq!(Some(6875), euler003(600851475143));
+    assert_eq!(Some(6857), euler003(600851475143));
 }
 
-pub fn euler004(n: usize) -> Option<usize> {
+pub fn euler004(digits: u32) -> usize {
     let mut max_palin = 0;
-    for i in (100..n+1).rev() {
-        for j in (i..n+1).rev() {
+    for i in (10usize.pow(digits-1)..10usize.pow(digits)).rev() {
+        for j in (i..10usize.pow(digits)).rev() {
             let n = i*j;
             if is_palin(n) && n > max_palin{
+                println!("{}", n);
                 max_palin = n;
             }
             if n < max_palin {
-                Some(max_palin);
+                break;
             }
         }
     }
-    return None;
+    max_palin
 }
+
+#[test]
+fn test_euler004() {
+    assert_eq!(9009, euler004(2));
+    assert_eq!(906609, euler004(3));
+}
+
 
 pub fn euler005(n: usize) -> usize {
     largest_multiple(n)

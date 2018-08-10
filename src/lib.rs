@@ -641,9 +641,22 @@ fn test_euler014() {
 /// down, there are exactly 6 routes to the bottom right corner.
 ///
 /// How many such routes are there through a 20x20 grid?
-pub fn euler015(gridsize: usize) -> usize {
+pub fn euler015<T>(grid_size: T) -> T
+    where T: Mul<T, Output = T> +
+             Div<T, Output = T> +
+             Clone +
+             FromPrimitive + 
+             Integer
+{
     //40 choose 20 = 
-    137846528820
+    let path_length = grid_size.clone()*T::from_usize(2).unwrap();
+    fact(path_length)/(fact(grid_size.clone())*fact(grid_size))
+}
+
+#[test]
+fn test_euler015() {
+    assert_eq!(6, euler015(2));
+    assert_eq!(BigUint::from_usize(137846528820).unwrap(), euler015(BigUint::from_usize(20).unwrap()));
 }
 
 /// `2^15 = 32768` and the sum of its digits is `3+2+7+6+8=26`

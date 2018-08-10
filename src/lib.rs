@@ -3,7 +3,7 @@ extern crate num;
 use num::bigint::{BigUint};
 use num::{ToPrimitive, FromPrimitive, pow, Zero, One, Integer, NumCast};
 use std::collections::HashMap;
-use std::ops::{AddAssign, Add, Mul};
+use std::ops::{AddAssign, Add, Mul, Sub, Div};
 use std::hash::{Hash};
 
 // Functions for Problem 2
@@ -233,11 +233,13 @@ fn add_digits(n: BigUint) -> BigUint {
 }
 
 
-fn fact(n: BigUint) -> BigUint {
-    if n == BigUint::one() {
+fn fact<T>(n: T) -> T
+    where T: One + Integer + Sub<T, Output = T> + Mul<T, Output = T> + Clone
+{
+    if n == T::one() {
         n
     } else {
-        &n * fact(&n - &BigUint::one())
+        n.clone() * fact(n.clone() - T::one())
     }
 }
 

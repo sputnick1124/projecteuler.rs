@@ -5,6 +5,8 @@ use num::{ToPrimitive, FromPrimitive, pow, Zero, One, Integer, NumCast};
 use std::collections::HashMap;
 use std::ops::{AddAssign, Add, Mul, Sub, Div};
 use std::hash::{Hash};
+use std::io::{BufReader, BufRead};
+use std::fs::File;
 
 // Functions for Problem 2
 
@@ -572,20 +574,44 @@ fn test_euler012() {
 }
 
 /// Work out the first ten digits of the sum of the following one-hundred 50-digit numbers.
-/// 37107287533902102798797998220837590246510135740250
-/// 46376937677490009712648124896970078050417018260538
-/// 74324986199524741059474233309513058123726617309629
-/// ...
-/// details elided. see euler013.txt for full list
-/// ...
-/// 53503534226472524250874054075591789781264330331690
-pub fn euler013(digits: usize) -> usize {
-    5537376230
+/// `37107287533902102798797998220837590246510135740250`  
+/// `46376937677490009712648124896970078050417018260538`  
+/// `74324986199524741059474233309513058123726617309629`  
+/// `...`  
+/// `details elided. see euler013.txt for full list`  
+/// `...`  
+/// `53503534226472524250874054075591789781264330331690`
+pub fn euler013(digits: usize) -> BigUint {
+    let f = File::open("euler013.txt").expect("Unable to read file");
+    let file = BufReader::new(&f);
+    let mut bignums: Vec<BigUint> = Vec::new();
+
+    for line in file.lines() {
+        let num_string = line.unwrap();
+        let n = BigUint::parse_bytes(num_string.as_bytes(), 10).unwrap();
+        bignums.push(n);
+    }
+
+    let summation = bignums.iter().fold(BigUint::zero(), |acc, x| acc + x);
+
+    // determine how many digits are in the sum. Can't do logarithm on BigUint, so find bounds by
+    // trial comparison to powers of ten
+    let ten = BigUint::from_usize(10).unwrap();
+    let mut num_digits = 0usize;
+    for power in 1.. {
+        let lower = pow(ten.clone(), power);
+        let upper = pow(ten.clone(), power + 1);
+        if lower <= summation && summation < upper {
+            num_digits = power + 1;
+            break;
+        }
+    }
+    summation/pow(ten, num_digits - digits)
 }
 
 #[test]
 fn test_euler013() {
-    assert_eq!(5537376230, euler013(10));
+    assert_eq!(BigUint::from_usize(5537376230).unwrap(), euler013(10));
 }
 
 /// The following iterative sequence is defined for the set of positive integers:  

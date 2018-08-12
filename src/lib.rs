@@ -28,9 +28,8 @@ impl<T> Iterator for Fibonacci<T>
 {
     type Item = T;
     fn next(&mut self) -> Option<T> {
-        let tmp: T = self.a.clone();
-        self.a = self.b.clone();
-        self.b += tmp;
+        mem::swap(&mut self.a, &mut self.b);
+        self.b += self.a.clone();
         Some(self.a.clone())
     }
 }

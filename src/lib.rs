@@ -279,6 +279,21 @@ fn test_element_wise_add() {
                element_wise_add(v1, v2));
 }
 
+fn has_n_digits<T>(num: T, n: usize) -> bool
+    where T: Integer + FromPrimitive + PartialOrd + Clone
+{
+    let ten = T::from_u8(10).unwrap();
+    let lower = pow(ten.clone(), n - 1);
+    let upper = pow(ten.clone(), n);
+    lower <= num && num < upper
+}
+
+#[test]
+fn test_has_n_digits() {
+    assert!(has_n_digits(1, 1));
+    assert!(has_n_digits(1234123412334u64, 13));
+}
+
 /// If we list all the natural numbers below 10 that are multiples of `3` or `5`, we get `3`, `5`,
 /// `6`, and `9`. The sum of these multiples is `23`.
 ///
@@ -809,6 +824,28 @@ pub fn euler020(n: BigUint) -> BigUint {
 ///
 /// Evaluate the sum of all the amicable numbers under 1000.
 pub fn euler021() -> u64 {
+    0u64
+}
+
+/// The Fibonacci sequence is defined by the recurrence relation:  
+/// *F_n = F_{n-1} + F_{n-2}*, where *F_1=1* and *F_2=1*.
+///
+/// Hence the first 12 terms will be:  
+/// 1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 144.
+///
+/// The 12th term, *F_12*, is the first term to contain three digits.  
+/// What is the index of the first term in the Fibonacci sequence to contain 1000 digits?
+pub fn euler025(digits: usize) -> usize {
+    let mut count = 1usize;
+    let fibs = fibonacci::<BigUint>();
+    fibs.filter(|f| {count += 1; has_n_digits(f.clone(), digits)}).nth(0);
+    count
+}
+
+#[test]
+fn test_euler025() {
+    assert_eq!(12, euler025(3));
+    assert_eq!(4782, euler025(1000));
 }
 
 pub fn euler067() -> Vec<u64> {

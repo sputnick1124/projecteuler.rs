@@ -11,8 +11,6 @@ use std::mem;
 use std::cmp::max;
 use std::fmt::Debug;
 
-// Functions for Problem 2
-
 struct Fibonacci<T>
     where T: Integer
 {
@@ -809,6 +807,7 @@ pub fn euler020(n: BigUint) -> BigUint {
 ///
 /// Evaluate the sum of all the amicable numbers under 1000.
 pub fn euler021() -> u64 {
+    unimplemented!();
 }
 
 pub fn euler067() -> Vec<u64> {

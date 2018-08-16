@@ -1,3 +1,4 @@
+extern crate itertools; 
 extern crate num;
 
 use num::bigint::{BigUint};
@@ -8,10 +9,9 @@ use std::hash::{Hash};
 use std::io::{BufReader, BufRead};
 use std::fs::File;
 use std::mem;
-use std::cmp::max;
+use std::cmp::{min, max};
 use std::fmt::Debug;
-
-// Functions for Problem 2
+use itertools::Itertools;
 
 struct Fibonacci<T>
     where T: Integer
@@ -220,6 +220,24 @@ fn number_of_factors<T>(n: T) -> usize
         .values()
         .map(|&x| x)
         .fold(1, |acc, x| acc*(x))
+}
+
+fn all_factors<T>(n: T) -> Vec<T>
+    where T: Integer + FromPrimitive + DivAssign + Copy + One + Hash + Debug
+{
+    let prime_factors = find_factors(n);
+    let prime_counts = count_factors(prime_factors);
+    let prime_factors: Vec<&T> = prime_counts.keys().collect();
+    let counts: Vec<&usize> = prime_factors.clone().iter().map(|x| prime_counts.get(x).unwrap()).collect();
+    let power_combinations = counts.iter().map(|&x| 0..*x).multi_cartesian_product();
+
+    let mut factors: Vec<T> = Vec::new();
+    for powers in power_combinations {
+        let factor = prime_factors.iter().zip(powers).fold(T::one(), |acc, (p, e)| acc * pow(**p, e));
+        factors.push(factor);
+    }
+    factors.pop();
+    factors
 }
 
 fn collatz(x: u64, count: u64) -> u64 {
@@ -830,9 +848,36 @@ pub fn euler020(n: BigUint) -> BigUint {
 /// therefore *d(220) = 284*. The proper divisors of 284 are 1, 2, 4, 71, and 142; so *d(284) =
 /// 220*.
 ///
-/// Evaluate the sum of all the amicable numbers under 1000.
-pub fn euler021() -> u64 {
-    0u64
+/// Evaluate the sum of all the amicable numbers under 10000.
+pub fn euler021(limit: u32) -> u32 {
+    let mut amicable_pairs: HashSet<(u32, u32)> = HashSet::new();
+    let mut acc = 0u32;
+    for n in 1..limit {
+        let divisor_sum = all_factors(n).iter().fold(0, |acc, x| acc + x);
+        let amicable_hopeful = (min(divisor_sum, n), max(divisor_sum, n));
+        match amicable_pairs.take(&amicable_hopeful) {
+            Some(a) => {
+                println!("Amicable numbers: {:?}", a);
+                acc += a.0 + a.1;
+           },
+            None    => {amicable_pairs.insert(amicable_hopeful);},
+        }
+    }
+    acc
+}
+
+#[test]
+fn test_euler021() {
+    let mut factors1 = all_factors(220);
+    factors1.sort();
+    assert_eq!(vec![1, 2, 4, 5, 10, 11, 20, 22, 44, 55, 110], factors1);
+
+    let mut factors2 = all_factors(284);
+    factors2.sort();
+    assert_eq!(vec![1, 2, 4, 71, 142], factors2);
+
+    assert_eq!(220 + 284, euler021(1_000));
+    assert_eq!(31626, euler021(10_000));
 }
 
 /// The Fibonacci sequence is defined by the recurrence relation:  

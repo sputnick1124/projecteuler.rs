@@ -2,8 +2,8 @@ extern crate num;
 
 use num::bigint::{BigUint};
 use num::{ToPrimitive, FromPrimitive, pow, Zero, One, Integer, NumCast};
-use std::collections::HashMap;
-use std::ops::{AddAssign, Add, Mul, Sub, Div};
+use std::collections::{HashMap, HashSet};
+use std::ops::{DivAssign, AddAssign, Add, Mul, Sub, Div};
 use std::hash::{Hash};
 use std::io::{BufReader, BufRead};
 use std::fs::File;
@@ -181,18 +181,20 @@ fn tri_number(n: u64) -> u64 {
     (n + 1)*n/2
 }
 
-fn find_factors(n: u64) -> Vec<u64> {
+fn find_factors<T>(n: T) -> Vec<T>
+    where T: Integer + One + Zero + Div<T, Output = T> + FromPrimitive + DivAssign + Copy
+{
     let mut n = n;
-    let mut factors: Vec<u64> = Vec::new();
+    let mut factors: Vec<T> = Vec::new();
 
     loop {
-        if n == 1 {
+        if n == T::one() {
             break;
         }
         for p in 2.. {
-            if n%p == 0 {
-                n /= p;
-                factors.push(p);
+            if n%T::from_i32(p).unwrap() == T::zero() {
+                n /= T::from_i32(p).unwrap();
+                factors.push(T::from_i32(p).unwrap());
                 break;
             }
         }
@@ -200,17 +202,23 @@ fn find_factors(n: u64) -> Vec<u64> {
     factors
 }
 
-fn count_factors(factors: Vec<u64>) -> Vec<usize> {
-    let mut counts: HashMap<u64, usize> = HashMap::new();
+fn count_factors<T>(factors: Vec<T>) -> HashMap<T, usize> //Vec<usize> 
+    where T: Hash + Integer + Copy
+{
+    let mut counts: HashMap<T, usize> = HashMap::new();
     for &factor in factors.iter() {
         let count = counts.entry(factor).or_insert(1);
         *count += 1;
     }
-    counts.values().map(|&x| x).collect()
+    counts
 }
 
-fn number_of_factors(n: u64) -> usize {
-    count_factors(find_factors(n)).iter()
+fn number_of_factors<T>(n: T) -> usize 
+    where T: Integer + Hash + FromPrimitive + DivAssign + Copy
+{
+    count_factors(find_factors(n))
+        .values()
+        .map(|&x| x)
         .fold(1, |acc, x| acc*(x))
 }
 

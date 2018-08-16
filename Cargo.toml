@@ -5,3 +5,4 @@ authors = ["Nicklas Stockton <nicklas.stockton@us.af.mil>"]
 
 [dependencies]
 num = "0.2"
+itertools = "0.7.8"

@@ -1,12 +1,9 @@
 extern crate euler;
-//extern crate num;
+extern crate clap;
 
-//use num::BigUint;
-//use num::FromPrimitive;
-
-use euler::euler003;
+use euler::*;
 
 fn main() {
 
-    println!("{}", euler003(600851475143).unwrap());
+    println!("{}", euler008(4));
 }

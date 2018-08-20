@@ -266,8 +266,8 @@ fn add_digits(n: BigUint) -> BigUint {
 fn fact<T>(n: T) -> T
     where T: One + Integer + Sub<T, Output = T> + Mul<T, Output = T> + Clone
 {
-    if n == T::one() {
-        n
+    if n <= T::one() {
+        T::one()
     } else {
         n.clone() * fact(n.clone() - T::one())
     }

@@ -912,6 +912,35 @@ pub fn euler023() -> u64 {
     unimplemented!();
 }
 
+pub fn euler024(n: u64) -> u64 {
+    let mut digits: Vec<u64> = (0..10).collect();
+    let mut number: Vec<u64> = Vec::new();
+    let facts = (0..10).rev().map(|x| fact(x));
+    let mut partial_sum = 0u64;
+    for f in facts {
+        let mut k = 0u64;
+        loop {
+            if partial_sum + f*(k+1) >= n {
+                partial_sum += f*k;
+                number.push(digits.remove(k as usize));
+                break;
+            }
+            k += 1;
+        }
+    }
+    number.iter().rev().zip(0..11).map(|(d, p)| d*10u64.pow(p)).fold(0u64, |acc, x| acc + x)
+}
+
+#[test]
+fn test_euler024() {
+    assert_eq!(9876543210, euler024(fact(10)));
+    assert_eq!(987654321, euler024(fact(9)));
+    assert_eq!(1987654320, euler024(2*fact(9)));
+    assert_eq!(2987654310, euler024(3*fact(9)));
+    assert_eq!(3987654210, euler024(4*fact(9)));
+}
+
+
 /// The Fibonacci sequence is defined by the recurrence relation:  
 /// *F_n = F_{n-1} + F_{n-2}*, where *F_1=1* and *F_2=1*.
 ///

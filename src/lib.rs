@@ -324,15 +324,15 @@ fn test_has_n_digits() {
 /// `6`, and `9`. The sum of these multiples is `23`.
 ///
 /// Find the sum of all the multiples of `3` or `5` below `1000`
-pub fn euler001(n: usize) -> usize {
-    (1..n)
-        .filter_map(|x| if x%3==0 || x%5 == 0 {Some(x)} else {None})
+pub fn euler001(limit: usize, divisors: Vec<usize>) -> usize {
+    (1..limit)
+        .filter_map(|x| if divisors.iter().any(|d| x%d==0) {Some(x)} else {None})
         .fold(0usize, |acc, x| acc + x)
 }
 
 #[test]
 fn test_euler001() {
-    assert_eq!(23, euler001(10));
+    assert_eq!(23, euler001(10, vec![3, 5]));
 }
 
 fn triangle_vec(file_path: String) -> Vec<Vec<u64>> {

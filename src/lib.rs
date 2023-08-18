@@ -1,28 +1,27 @@
 extern crate num;
 
-use num::bigint::{BigUint};
-use num::{ToPrimitive, FromPrimitive, pow, Zero, One, Integer, NumCast};
-use std::collections::HashMap;
-use std::ops::{AddAssign, Add, Mul, Sub, Div};
-use std::hash::{Hash};
-use std::io::{BufReader, BufRead};
-use std::fs::File;
-use std::mem;
+use num::bigint::BigUint;
+use num::{pow, FromPrimitive, Integer, NumCast, One, ToPrimitive, Zero};
 use std::cmp::max;
+use std::collections::HashMap;
 use std::fmt::Debug;
+use std::fs::File;
+use std::hash::Hash;
+use std::io::{BufRead, BufReader};
+use std::mem;
+use std::ops::{Add, AddAssign, Div, Mul, Sub};
 
 struct Fibonacci<T>
-    where T: Integer
+where
+    T: Integer,
 {
     a: T,
     b: T,
 }
 
 impl<T> Iterator for Fibonacci<T>
-    where T: Integer +
-             Add<T, Output = T> +
-             AddAssign +
-             Clone
+where
+    T: Integer + Add<T, Output = T> + AddAssign + Clone,
 {
     type Item = T;
     fn next(&mut self) -> Option<T> {
@@ -33,55 +32,59 @@ impl<T> Iterator for Fibonacci<T>
 }
 
 fn fibonacci<T>() -> Fibonacci<T>
-    where T: Integer + One
+where
+    T: Integer + One,
 {
-    Fibonacci{ a: T::one(), b: T::one() }
+    Fibonacci {
+        a: T::one(),
+        b: T::one(),
+    }
 }
 
-
 struct Sieve<T>
-    where T: Integer
+where
+    T: Integer,
 {
     masks: HashMap<T, T>,
     v: T,
 }
 
 impl<T> Iterator for Sieve<T>
-    where T: Integer + 
-             NumCast + 
-             AddAssign + 
-             Hash + 
-             Clone +
-             Add<T, Output = T> + 
-             Mul<T, Output = T>
+where
+    T: Integer + NumCast + AddAssign + Hash + Clone + Add<T, Output = T> + Mul<T, Output = T>,
 {
     type Item = T;
     fn next(&mut self) -> Option<T> {
-        let two : T = NumCast::from(2).unwrap();
-        if self.v == two.clone() { // handle starting case
+        let two: T = NumCast::from(2).unwrap();
+        if self.v == two.clone() {
+            // handle starting case
             self.v += T::one();
             return Some(two.clone());
         } else {
             let q = self.v.clone();
 
-            match self.masks.remove(&q) {   // lookup number in map
-                Some(p) => {                // if there
-                    let mut x = q + p.clone();      // start incrementing its multiples
+            match self.masks.remove(&q) {
+                // lookup number in map
+                Some(p) => {
+                    // if there
+                    let mut x = q + p.clone(); // start incrementing its multiples
                     loop {
                         if self.masks.contains_key(&x) {
                             x += p.clone();
                         } else {
-                            break;          // until its multiples are no longer in the map
+                            break; // until its multiples are no longer in the map
                         }
                     }
-                    self.masks.insert(x, p);// insert back into map with updated value
+                    self.masks.insert(x, p); // insert back into map with updated value
 
-                    self.v += two.clone();            // increment the search number by 2
-                    self.next()             // and call self
+                    self.v += two.clone(); // increment the search number by 2
+                    self.next() // and call self
                 }
-                None => {                           // else (if not already in map)
+                None => {
+                    // else (if not already in map)
                     //self.masks.insert(q*q, NumCast::from(2).unwrap()*q);    // place in map
-                    self.masks.insert(q.clone()*q.clone(), two.clone()*q.clone());    // place in map
+                    self.masks
+                        .insert(q.clone() * q.clone(), two.clone() * q.clone()); // place in map
 
                     self.v += two; // and it's prime. increment and return
 
@@ -93,17 +96,20 @@ impl<T> Iterator for Sieve<T>
 }
 
 fn sieve<T>() -> Sieve<T>
-    where T: Integer + NumCast + Hash
+where
+    T: Integer + NumCast + Hash,
 {
-    Sieve{masks: HashMap::new(), v: NumCast::from(2).unwrap()}
+    Sieve {
+        masks: HashMap::new(),
+        v: NumCast::from(2).unwrap(),
+    }
 }
 
 fn list_primes<T>(n: usize) -> Vec<T>
-    where T: Integer + NumCast
+where
+    T: Integer + NumCast,
 {
-    let mut primes: Vec<bool> = (0..n + 1)
-                                    .map(|num| num == 2 || num & 1 != 0)
-                                    .collect();
+    let mut primes: Vec<bool> = (0..n + 1).map(|num| num == 2 || num & 1 != 0).collect();
     let mut num: usize = 3;
 
     while num * num <= n {
@@ -113,23 +119,27 @@ fn list_primes<T>(n: usize) -> Vec<T>
             j += num;
         }
         num += 2;
-        
     }
     primes
         .into_iter()
         .enumerate()
         .skip(2)
-        .filter_map(
-            |(i, p)| if p {Some(NumCast::from(i).unwrap())} else {None})
+        .filter_map(|(i, p)| {
+            if p {
+                Some(NumCast::from(i).unwrap())
+            } else {
+                None
+            }
+        })
         .collect::<Vec<T>>()
 }
 
 fn is_palin(num: usize) -> bool {
     let mut num = num;
 
-    let mut digits:Vec<usize> = vec![];
+    let mut digits: Vec<usize> = vec![];
     while num > 0 {
-        digits.push(num%10);
+        digits.push(num % 10);
         num /= 10;
     }
 
@@ -148,9 +158,9 @@ fn largest_multiple(n: usize) -> usize {
     let mut res = primes.iter().skip(1).fold(1, |acc, x| acc * x);
 
     for i in 2..n {
-        if res%i > 0 {
-            for j in list_primes::<usize>(i+1) {
-                if i%j == 0 {
+        if res % i > 0 {
+            for j in list_primes::<usize>(i + 1) {
+                if i % j == 0 {
                     res *= j;
                 }
             }
@@ -160,11 +170,11 @@ fn largest_multiple(n: usize) -> usize {
 }
 
 fn sum_squares(n: usize) -> usize {
-    (1..n+1).fold(0, |acc, x| acc + x.pow(2))
+    (1..n + 1).fold(0, |acc, x| acc + x.pow(2))
 }
 
 fn square_sum(n: usize) -> usize {
-    (1..n+1).fold(0, |acc, x| acc + x).pow(2)
+    (1..n + 1).fold(0, |acc, x| acc + x).pow(2)
 }
 
 fn is_pythagorean(a: u32, b: u32, c: u32) -> bool {
@@ -172,11 +182,11 @@ fn is_pythagorean(a: u32, b: u32, c: u32) -> bool {
 }
 
 fn is_pyth_sum(a: u32, b: u32, c: u32, n: u32) -> bool {
-    return a + b + c == n
+    return a + b + c == n;
 }
 
 fn tri_number(n: u64) -> u64 {
-    (n + 1)*n/2
+    (n + 1) * n / 2
 }
 
 fn find_factors(n: u64) -> Vec<u64> {
@@ -188,7 +198,7 @@ fn find_factors(n: u64) -> Vec<u64> {
             break;
         }
         for p in 2.. {
-            if n%p == 0 {
+            if n % p == 0 {
                 n /= p;
                 factors.push(p);
                 break;
@@ -208,8 +218,9 @@ fn count_factors(factors: Vec<u64>) -> Vec<usize> {
 }
 
 fn number_of_factors(n: u64) -> usize {
-    count_factors(find_factors(n)).iter()
-        .fold(1, |acc, x| acc*(x))
+    count_factors(find_factors(n))
+        .iter()
+        .fold(1, |acc, x| acc * (x))
 }
 
 fn collatz(x: u64, count: u64) -> u64 {
@@ -217,11 +228,11 @@ fn collatz(x: u64, count: u64) -> u64 {
         1 => count + 1,
         _ => {
             if x % 2 == 0 {
-                collatz(x/2, count + 1)
+                collatz(x / 2, count + 1)
             } else {
-                collatz(3*x + 1, count + 1)
+                collatz(3 * x + 1, count + 1)
             }
-        },
+        }
     }
 }
 
@@ -230,13 +241,13 @@ fn add_digits(n: BigUint) -> BigUint {
         n
     } else {
         let ten = BigUint::from_u64(10).unwrap();
-        &n%&ten + add_digits(&n/&ten)
+        &n % &ten + add_digits(&n / &ten)
     }
 }
 
-
 fn fact<T>(n: T) -> T
-    where T: One + Integer + Sub<T, Output = T> + Mul<T, Output = T> + Clone
+where
+    T: One + Integer + Sub<T, Output = T> + Mul<T, Output = T> + Clone,
 {
     if n == T::one() {
         n
@@ -247,9 +258,11 @@ fn fact<T>(n: T) -> T
 
 fn pairwise_max<T>(v: Vec<T>) -> Vec<T>
 //fn pairwise_max(v: Vec<u32>) -> Vec<&u32>
-    where T: Integer + Ord + Zero + Debug + Copy
+where
+    T: Integer + Ord + Zero + Debug + Copy,
 {
-    v.iter().zip(v.iter().skip(1))
+    v.iter()
+        .zip(v.iter().skip(1))
         .map(|(x1, x2)| max(*x1, *x2))
         //.map(|x| *x)
         .collect::<Vec<T>>()
@@ -262,19 +275,20 @@ fn test_pairwise_max() {
 }
 
 fn element_wise_add<T>(v1: Vec<T>, v2: Vec<T>) -> Vec<T>
-    where T: Add<T, Output = T> + Integer + Copy
+where
+    T: Add<T, Output = T> + Integer + Copy,
 {
-    v1.iter().zip(v2.iter())
-        .map(|(a, b)| *a + *b)
-        .collect()
+    v1.iter().zip(v2.iter()).map(|(a, b)| *a + *b).collect()
 }
 
 #[test]
 fn test_element_wise_add() {
     let v1: Vec<u32> = vec![1, 2, 3, 4, 5, 6, 7];
     let v2: Vec<u32> = vec![1, 2, 3, 4, 5, 6, 7];
-    assert_eq!(vec![2u32, 4u32, 6u32, 8u32, 10u32, 12u32, 14u32],
-               element_wise_add(v1, v2));
+    assert_eq!(
+        vec![2u32, 4u32, 6u32, 8u32, 10u32, 12u32, 14u32],
+        element_wise_add(v1, v2)
+    );
 }
 
 /// If we list all the natural numbers below 10 that are multiples of `3` or `5`, we get `3`, `5`,
@@ -283,7 +297,13 @@ fn test_element_wise_add() {
 /// Find the sum of all the multiples of `3` or `5` below `1000`
 pub fn euler001(n: usize) -> usize {
     (1..n)
-        .filter_map(|x| if x%3==0 || x%5 == 0 {Some(x)} else {None})
+        .filter_map(|x| {
+            if x % 3 == 0 || x % 5 == 0 {
+                Some(x)
+            } else {
+                None
+            }
+        })
         .fold(0usize, |acc, x| acc + x)
 }
 
@@ -296,13 +316,16 @@ fn triangle_vec(file_path: String) -> Vec<Vec<u64>> {
     let fd = File::open(file_path).expect("unable to open file");
     let file = BufReader::new(&fd);
     file.lines()
-        .map(|line| line.unwrap().split_whitespace()
-             .map(|numstr| numstr.parse().expect("Not able to parse number"))
-             .collect())
+        .map(|line| {
+            line.unwrap()
+                .split_whitespace()
+                .map(|numstr| numstr.parse().expect("Not able to parse number"))
+                .collect()
+        })
         .collect()
 }
 
-/// Each new term in the Fibonacci sequence is generated by adding the previous two terms. By starting with 
+/// Each new term in the Fibonacci sequence is generated by adding the previous two terms. By starting with
 /// `1` and `2`, the first 10 terms will be:
 ///
 /// ` 1, 2, 3, 5, 8, 13, 21, 34, 55, 89, ...`
@@ -310,7 +333,7 @@ fn triangle_vec(file_path: String) -> Vec<Vec<u64>> {
 /// By considering the terms in the Fibonacci sequence whose values do not exceed four million,
 /// find the sum of the even-valued terms.
 pub fn euler002(n: u64) -> u64
-    //where T: Integer +
+//where T: Integer +
              //Add<T, Output = T> +
              //Zero +
              //AddAssign +
@@ -318,9 +341,8 @@ pub fn euler002(n: u64) -> u64
              //NumCast
 {
     let fibs = fibonacci::<u64>();
-    fibs
-        .take_while(|x| x <= &n)
-        .filter_map(|x| if x%2 == 0 { Some(x) } else { None})
+    fibs.take_while(|x| x <= &n)
+        .filter_map(|x| if x % 2 == 0 { Some(x) } else { None })
         .fold(0, |acc, x| acc + x)
 }
 
@@ -334,17 +356,16 @@ fn test_euler002() {
 ///
 /// What is the largest prime factor of the number `600851475143`?
 pub fn euler003(n: usize) -> Option<usize> {
-    let bignum = n;//600851475143;
+    let bignum = n; //600851475143;
     let limit = (n as f64).sqrt() as usize;
     let primes: Vec<usize> = list_primes(limit);
 
     for p in primes.iter().rev() {
-        if bignum%(p.to_usize().unwrap()) == 0 {
+        if bignum % (p.to_usize().unwrap()) == 0 {
             return Some(p.to_usize().unwrap());
-        } 
+        }
     }
     return None;
-
 }
 
 #[test]
@@ -359,10 +380,10 @@ fn test_euler003() {
 /// Find the largest palindrome made from the product of two 3-digit numbers.
 pub fn euler004(digits: u32) -> usize {
     let mut max_palin = 0;
-    for i in (10usize.pow(digits-1)..10usize.pow(digits)).rev() {
+    for i in (10usize.pow(digits - 1)..10usize.pow(digits)).rev() {
         for j in (i..10usize.pow(digits)).rev() {
-            let n = i*j;
-            if is_palin(n) && n > max_palin{
+            let n = i * j;
+            if is_palin(n) && n > max_palin {
                 println!("{}", n);
                 max_palin = n;
             }
@@ -490,10 +511,10 @@ pub fn euler008(digits: usize) -> BigUint {
     let mut biggest: BigUint = Zero::zero();
     loop {
         if n == Zero::zero() {
-            break
+            break;
         }
         let mut m: BigUint = One::one();
-        let mut m0: BigUint = &n%&q;
+        let mut m0: BigUint = &n % &q;
 
         loop {
             m *= &m0 % &d;
@@ -530,7 +551,7 @@ pub fn euler009(n: u32) -> Option<u32> {
         for b in a..n {
             for c in b..n {
                 if is_pythagorean(a, b, c) && is_pyth_sum(a, b, c, n) {
-                    return Some(a*b*c);
+                    return Some(a * b * c);
                 }
             }
         }
@@ -549,7 +570,7 @@ fn test_euler009() {
 ///
 /// Find the sum of all the primes below two million.
 pub fn euler010(limit: usize) -> usize {
-    let s : Sieve<usize> = sieve();
+    let s: Sieve<usize> = sieve();
     s.take_while(|x| x < &limit).fold(0usize, |acc, x| acc + x)
 }
 
@@ -585,8 +606,7 @@ fn test_euler010() {
 /// The product of these numbers is `26*63*78*14 = 1788696`.  
 /// What is the greatest product of four adjacent numbers in the same direction (up, down, left,
 /// right, or diagonally) in the 20x20 grid?
-pub fn euler011() {
-}
+pub fn euler011() {}
 
 /// The sequence of triangle numbers is generated by adding the natural numbers. So the 7th
 /// triangle number would be `1+2+3+4+5+6+7=28`. The first ten terms would be:
@@ -605,7 +625,10 @@ pub fn euler011() {
 /// We can see that `28` is the first triangle number to have over five divisors.  
 /// What is the value of the first triangle number to have over five hundred divisors?
 pub fn euler012(n: usize) -> u64 {
-    let num_factors = (2..).map(|x| tri_number(x)).filter(|x| number_of_factors(*x) > n).nth(0);
+    let num_factors = (2..)
+        .map(|x| tri_number(x))
+        .filter(|x| number_of_factors(*x) > n)
+        .nth(0);
     num_factors.unwrap()
 }
 
@@ -648,7 +671,7 @@ pub fn euler013(digits: usize) -> BigUint {
             break;
         }
     }
-    summation/pow(ten, num_digits - digits)
+    summation / pow(ten, num_digits - digits)
 }
 
 #[test]
@@ -670,7 +693,11 @@ fn test_euler013() {
 ///
 /// __Note__: Once the chain starts the terms are allowed to go above one million.
 pub fn euler014(n: u64) -> u64 {
-    (1..n).map(|x| (x, collatz(x, 0))).max_by_key(|tuple| (*tuple).1).unwrap().0
+    (1..n)
+        .map(|x| (x, collatz(x, 0)))
+        .max_by_key(|tuple| (*tuple).1)
+        .unwrap()
+        .0
 }
 
 #[test]
@@ -684,28 +711,28 @@ fn test_euler014() {
 ///
 /// How many such routes are there through a 20x20 grid?
 pub fn euler015<T>(grid_size: T) -> T
-    where T: Mul<T, Output = T> +
-             Div<T, Output = T> +
-             Clone +
-             FromPrimitive + 
-             Integer
+where
+    T: Mul<T, Output = T> + Div<T, Output = T> + Clone + FromPrimitive + Integer,
 {
-    //40 choose 20 = 
-    let path_length = grid_size.clone()*T::from_usize(2).unwrap();
-    fact(path_length)/(fact(grid_size.clone())*fact(grid_size))
+    //40 choose 20 =
+    let path_length = grid_size.clone() * T::from_usize(2).unwrap();
+    fact(path_length) / (fact(grid_size.clone()) * fact(grid_size))
 }
 
 #[test]
 fn test_euler015() {
     assert_eq!(6, euler015(2));
-    assert_eq!(BigUint::from_usize(137846528820).unwrap(), euler015(BigUint::from_usize(20).unwrap()));
+    assert_eq!(
+        BigUint::from_usize(137846528820).unwrap(),
+        euler015(BigUint::from_usize(20).unwrap())
+    );
 }
 
 /// `2^15 = 32768` and the sum of its digits is `3+2+7+6+8=26`
 ///
 /// What is the sum of the digits of the number `2^1000`?
 pub fn euler016(power: usize) -> BigUint {
-    let two : BigUint = BigUint::from_u64(2u64).unwrap();
+    let two: BigUint = BigUint::from_u64(2u64).unwrap();
     add_digits(pow(two, power))
 }
 
@@ -718,8 +745,7 @@ pub fn euler016(power: usize) -> BigUint {
 /// __Note__: Do not count spaces or hyphens. For example, 342 (three hundred and forty-two)
 /// contains 23 letters and 115 (one hundred and fifteen) contains 20 letters. The use of "and"
 /// when writing out numbers is in compliance with British usage.
-pub fn euler017() {
-}
+pub fn euler017() {}
 
 /// By starting at the top of the triangle below and moving to adjacent numbers on the row below,
 /// the maximum total from top to bottom is 23.  
@@ -783,8 +809,7 @@ fn test_euler018() {
 ///
 /// How many Sundays fell on the first day of the month during the twentieth century (1 Jan 1900 to
 /// 31 Dec 2000)?
-pub fn euler019() {
-}
+pub fn euler019() {}
 
 /// `n!` means `n*(n-1)*...*3**2*1`
 ///
